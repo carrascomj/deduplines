@@ -51,10 +51,11 @@ fn process_file(
     let mut writer = io::BufWriter::new(File::create(output_path).unwrap());
     let mut num_removed = 0;
     for line in reader.lines() {
-        let line = line.unwrap();
+        let mut line = line.unwrap();
         let score_identifier = OrderedFloat::from(get_score_identifier(&line));
         if truth_set.insert(score_identifier) {
             // write to output buffer
+            line.push('\n');
             writer.write_all(line.as_bytes()).expect("should be alrite");
         } else {
             num_removed += 1;
