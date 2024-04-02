@@ -26,6 +26,7 @@ fn main() {
     // create output directory if it doesn't exist
     std::fs::create_dir_all(&args.output_dir).unwrap();
     // iterate over files in input directory
+    let mut truth_set = HashSet::new();
     for entry in std::fs::read_dir(args.input_dir).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
@@ -33,7 +34,6 @@ fn main() {
         if path.extension().map(|ext| ext != "lines").unwrap_or(true) {
             continue;
         }
-        let mut truth_set = HashSet::new();
         // create new file in output dir
         let output_path = args.output_dir.join(path.file_name().unwrap());
         let num_removed = process_file(&path, &output_path, &mut truth_set);
