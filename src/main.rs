@@ -11,6 +11,9 @@ pub const SQRT_5: f64 = 2.236_067_977_499_79_f64;
 
 #[derive(Debug, FromArgs)]
 /// Remove duplicate lines from .lines files contatining DNA.
+///
+/// The algorithm computes a hash for each sequence in the files that it is only
+/// guaranteed for sequences of the same length.
 pub struct Args {
     /// path to input directory containing .lines files to process.
     #[argh(positional)]
@@ -19,10 +22,14 @@ pub struct Args {
     /// path to output directory.
     #[argh(positional)]
     pub output_dir: PathBuf,
+
+    /// an optional lenght of the slice that will be used to compute the hash of each sequence. The length of the first sequence by default.
+    #[argh(option)]
+    length: Option<usize>,
 }
 
 fn main() {
-    let args: Args = argh::from_env();
+    let mut args: Args = argh::from_env();
     // create output directory if it doesn't exist
     std::fs::create_dir_all(&args.output_dir).unwrap();
     // iterate over files in input directory
@@ -36,7 +43,7 @@ fn main() {
         }
         // create new file in output dir
         let output_path = args.output_dir.join(path.file_name().unwrap());
-        let num_removed = process_file(&path, &output_path, &mut truth_set);
+        let num_removed = process_file(&path, &output_path, &mut truth_set, &mut args.length);
         eprintln!("Removed {num_removed} sequences from file {path:?}.")
     }
 }
@@ -45,6 +52,7 @@ fn process_file(
     path: &Path,
     output_path: &Path,
     truth_set: &mut HashSet<OrderedFloat<f64>>,
+    length: &mut Option<usize>,
 ) -> i32 {
     let file = File::open(path).unwrap();
     let reader = io::BufReader::with_capacity(1000000000, file);
@@ -52,7 +60,10 @@ fn process_file(
     let mut num_removed = 0;
     for line in reader.lines() {
         let mut line = line.unwrap();
-        let score_identifier = OrderedFloat::from(get_score_identifier(&line));
+        if length.is_none() {
+            *length = Some(line.len());
+        }
+        let score_identifier = OrderedFloat::from(get_score_identifier(&line[0..length.unwrap()]));
         if truth_set.insert(score_identifier) {
             // write to output buffer
             line.push('\n');
