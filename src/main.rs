@@ -5,9 +5,12 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};
+#[cfg(test)]
+mod tests;
 
 pub const SQRT_3: f64 = 1.732_050_807_568_877_2_f64;
 pub const SQRT_5: f64 = 2.236_067_977_499_79_f64;
+pub const NUCL: [char; 4] = ['A', 'T', 'G', 'C'];
 
 #[derive(Debug, FromArgs)]
 /// Remove duplicate lines from .lines files contatining DNA.
@@ -77,7 +80,7 @@ fn process_file(
 }
 
 fn get_score_identifier(line: &str) -> f64 {
-    let prod = line.chars().cartesian_product(['A', 'C', 'G', 'T']).fold(
+    let prod = line.chars().cartesian_product(NUCL).fold(
         [[1.0, 0.0], [0.0, 1.0]],
         |mut prod, (c, base)| {
             if c == base {
